@@ -49,10 +49,10 @@ Each story includes detailed acceptance criteria and preconditions for efficient
 ---
 
 ## 🧑‍🤝‍🧑 **Contributors**
-Arslan Taha DURAN
-Aslıhan GÜLLÜOĞLU
-Efe ERSAN
-Rüya TIRAŞ
+Arslan Taha DURAN,
+Aslıhan GÜLLÜOĞLU,
+Efe ERSAN,
+Rüya TIRAŞ,
 Taner ÖZÇELİK
 
 ---
