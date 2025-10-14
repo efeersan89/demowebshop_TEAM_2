@@ -5,18 +5,33 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import utility.BaseDriver;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TC_206_01_P {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
 
-        //
-        WebDriver driver = BaseDriver.driver("https://demowebshop.tricentis.com/");
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-popup-blocking");
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("credentials_enable_service", false);
+        prefs.put("profile.password_manager_enabled", false);
+        prefs.put("autofill.credit_card_enabled", false);
+        prefs.put("autofill.profile_enabled", false);
+        options.setExperimentalOption("prefs", prefs);
+
+        WebDriver driver = new ChromeDriver(options);
+        driver.manage().window().maximize();
+
+        driver.get("https://demowebshop.tricentis.com/");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
         //
@@ -39,23 +54,28 @@ public class TC_206_01_P {
         Actions actions = new Actions(driver);
         actions.sendKeys(Keys.PAGE_DOWN).perform();
 
-        WebElement productName = driver.findElement(By.xpath("//div[2]/h2/a[@href='/141-inch-laptop']"));
-        Assert.assertTrue("Product details not displayed", productName.isDisplayed());
+        WebElement featuredProduct = driver.findElement(By.cssSelector("div[class='product-item'][data-productid='31']"));
+        wait.until(ExpectedConditions.visibilityOf(featuredProduct));
 
         //
-        WebElement addToCartBtn = driver.findElement(By.cssSelector("body > div.master-wrapper-page > div.master-wrapper-content > div.master-wrapper-main > div.center-3 > div > div > div.product-grid.home-page-product-grid > div:nth-child(3) > div > div.details > div.add-info > div.buttons > input"));
+        WebElement addToCartBtn = driver.findElement(By.xpath("//div[@data-productid='31']/div[2]/div[3]/div[2]/input"));
+        wait.until(ExpectedConditions.elementToBeClickable(addToCartBtn));
         addToCartBtn.click();
+        addToCartBtn.sendKeys(Keys.ENTER);
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#bar-notification > p")));
 
         actions.sendKeys(Keys.PAGE_UP).perform();
+
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#bar-notification > p")));
 
         wait.until(ExpectedConditions.textToBePresentInElementLocated(By.cssSelector("span.cart-qty"), "1"));
         WebElement cartQty = driver.findElement(By.cssSelector("span.cart-qty"));
         Assert.assertTrue("Product not added to cart", cartQty.getText().contains("1"));
 
         //
-        WebElement cart = driver.findElement(By.className("ico-cart"));
+        WebElement cart = driver.findElement(By.xpath("//*[@id='topcartlink']/a"));
+        wait.until(ExpectedConditions.elementToBeClickable(cart));
         cart.click();
 
         WebElement cartPage = driver.findElement(By.cssSelector("div.page-title h1"));
@@ -76,32 +96,48 @@ public class TC_206_01_P {
         checkOutBtn.click();
 
         //
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("billing-address-select")));
-        WebElement nextBtn = driver.findElement(By.cssSelector("#billing-buttons-container > input"));
-        nextBtn.click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#opc-billing > div.step-title > h2")));
 
-        //
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("BillingNewAddress_City")));
-        driver.findElement(By.id("BillingNewAddress_City")).sendKeys("NYC");
-        driver.findElement(By.id("BillingNewAddress_Address1")).sendKeys("123 Main St");
-        driver.findElement(By.id("BillingNewAddress_ZipPostalCode")).sendKeys("10001");
-        driver.findElement(By.id("BillingNewAddress_PhoneNumber")).sendKeys("1234567890");
-        WebElement nextBtn1 = driver.findElement(By.cssSelector("input.button-1.new-address-next-step-button"));
-        nextBtn1.click();
+        WebElement addressChoice = driver.findElement(By.id("billing-address-select"));
+
+        if (!addressChoice.getAttribute("value").isEmpty()){
+            WebElement submitBtn = driver.findElement(By.xpath("//*[@id='billing-buttons-container']/input"));
+            wait.until(ExpectedConditions.elementToBeClickable(submitBtn));
+            submitBtn.click();
+        }
+
+        if (addressChoice.getAttribute("value").isEmpty()) {
+
+            WebElement countryDropdown2 = driver.findElement(By.id("BillingNewAddress_CountryId"));
+            countryDropdown2.sendKeys("United States");
+            WebElement stateDropdown2 = driver.findElement(By.id("BillingNewAddress_StateProvinceId"));
+            stateDropdown2.sendKeys("New York");
+
+            WebElement city = driver.findElement(By.id("BillingNewAddress_City"));
+            city.sendKeys("NYC");
+            WebElement address1 = driver.findElement(By.id("BillingNewAddress_Address1"));
+            address1.sendKeys("123 Main St");
+            WebElement zipCode = driver.findElement(By.id("BillingNewAddress_ZipPostalCode"));
+            zipCode.sendKeys("10001");
+            WebElement phoneNumber = driver.findElement(By.id("BillingNewAddress_PhoneNumber"));
+            phoneNumber.sendKeys("1234567890");
+            WebElement nextBtn1 = driver.findElement(By.cssSelector("input.button-1.new-address-next-step-button"));
+            nextBtn1.click();
+        }
 
         //
         wait.until(ExpectedConditions.elementToBeClickable(By.id("PickUpInStore")));
         WebElement pickUpInStore = driver.findElement(By.id("PickUpInStore"));
         pickUpInStore.click();
 
-        WebElement nextBtn2 = driver.findElement(By.cssSelector("input.button-1.shipping-method-next-step-button"));
+        WebElement nextBtn2 = driver.findElement(By.cssSelector("#shipping-buttons-container > input"));
         nextBtn2.click();
 
         //
-        wait.until(ExpectedConditions.elementToBeClickable(By.id("paymentmethod_1")));
-        WebElement paymentMethod =driver.findElement(By.id("paymentmethod_1"));
+        wait.until(ExpectedConditions.elementToBeClickable(By.id("paymentmethod_2")));
+        WebElement paymentMethod = driver.findElement(By.id("paymentmethod_2"));
         paymentMethod.click();
-        WebElement nextBtn3 =driver.findElement(By.cssSelector("input.button-1.payment-method-next-step-button"));
+        WebElement nextBtn3 = driver.findElement(By.cssSelector("input.button-1.payment-method-next-step-button"));
         nextBtn3.click();
 
         //
@@ -121,15 +157,13 @@ public class TC_206_01_P {
         nextBtn4.click();
 
         //
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("span.value-summary")));
-        WebElement totalPriceElement = driver.findElement(By.cssSelector("span.value-summary"));
-        String totalPrice = totalPriceElement.getText();
-        System.out.println("Step 13: Total Price = " + totalPrice);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#opc-confirm_order > div.step-title > h2")));
 
+        actions.sendKeys(Keys.PAGE_DOWN).perform();
 
         //
-        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("input.button-1.confirm-order-next-step-button")));
-        WebElement confirm = driver.findElement(By.cssSelector("input.button-1.confirm-order-next-step-button"));
+        wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#confirm-order-buttons-container > input")));
+        WebElement confirm = driver.findElement(By.cssSelector("#confirm-order-buttons-container > input"));
         confirm.click();
 
         //
