@@ -59,6 +59,7 @@ public class TC_201_01 {
         clickRegister.click();
 
 
+        System.out.println("Deneme");
 
 
 
